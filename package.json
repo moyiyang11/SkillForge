@@ -1,0 +1,14 @@
+{
+  "name": "skill-manager",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Codex and Claude Code skill management platform",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

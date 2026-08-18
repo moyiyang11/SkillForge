@@ -1,0 +1,4 @@
+.project-select span{flex:1}
+.library-actions{display:flex!important;gap:8px!important;flex-shrink:0}.library-actions button{white-space:nowrap}
+.install-field{margin:0 0 18px}.install-field legend{margin-bottom:9px}.platform-radios{display:grid;grid-template-columns:1fr 1fr;gap:10px}.install-target{font-size:11px;color:var(--muted);background:var(--bg);border-radius:9px;padding:10px 12px;margin:-6px 0 12px}.install-target code{color:var(--accent)}
+@media(max-width:760px){.library-actions{width:100%}.library-actions button{flex:1}}
