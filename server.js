@@ -75,6 +75,7 @@ async function collectSkillFiles(root, depth = 0) {
 
 async function scanSkills() {
   const seen = new Map();
+  const config = await readConfig(); const descriptions = config.skillDescriptions || {}; const categories = config.skillCategories || {}; const savedTags = config.skillTags || {};
   const skillRoots = await getSkillRoots();
   for (const location of skillRoots) {
     const files = await collectSkillFiles(location.root);
@@ -89,9 +90,12 @@ async function scanSkills() {
           .replace(/[#*_`>]/g, '')
           .trim().split(/\r?\n/).find(Boolean) || '暂无描述';
         const key = `${location.source}:${name}:${file}`;
+        const id = Buffer.from(key).toString('base64url');
+        const fallbackCategory = categories[id] || inferCategory(name, descriptions[id] || description);
+        const tags = Array.isArray(savedTags[id]) && savedTags[id].length ? savedTags[id] : [fallbackCategory];
         seen.set(key, {
-          id: Buffer.from(key).toString('base64url'), name, description,
-          category: inferCategory(name, description), source: location.source, scope: location.scope,
+          id, name, description: descriptions[id] || description, tags,
+          category: tags[0], source: location.source, scope: location.scope,
           command: `$${name}`, codexCommand: `$${name}`, claudeCommand: `/${name}`, path: file
         });
       } catch { /* skip unreadable skills */ }
@@ -113,26 +117,64 @@ async function installSkill(input) {
   if (!skill) throw new Error('找不到要安装的 Skill，请重新扫描');
   if (skill.source !== 'Skills 仓库') { const error = new Error('只有 Skills 仓库中的 Skill 可以安装'); error.status = 403; throw error; }
   const sourceDir = path.dirname(skill.path);
-  if (!['codex', 'claude'].includes(input.platform)) throw new Error('请选择安装平台');
-  const platformDir = input.platform === 'codex' ? '.codex' : '.claude';
-  let skillsRoot;
-  if (input.scope === 'global') {
-    skillsRoot = path.join(os.homedir(), platformDir, 'skills');
-  } else if (input.scope === 'project') {
+  const platforms = [...new Set(Array.isArray(input.platforms) ? input.platforms : [input.platform])];
+  if (!platforms.length || platforms.some((platform) => !['codex', 'claude'].includes(platform))) throw new Error('请至少选择一个安装平台');
+  let baseDir;
+  if (input.scope === 'global') baseDir = os.homedir();
+  else if (input.scope === 'project') {
     if (!input.projectPath) throw new Error('请先选择项目目录');
     const projectPath = path.resolve(input.projectPath);
     const stat = await fs.stat(projectPath).catch(() => null);
     if (!stat?.isDirectory()) throw new Error('选择的项目目录不存在');
-    skillsRoot = path.join(projectPath, platformDir, 'skills');
+    baseDir = projectPath;
   } else throw new Error('无效的安装范围');
   const folderName = path.basename(sourceDir);
-  const targetDir = path.join(skillsRoot, folderName);
-  const exists = await fs.stat(targetDir).then(() => true).catch(() => false);
-  if (exists) { const error = new Error(`目标已存在：${targetDir}`); error.status = 409; throw error; }
-  await fs.mkdir(skillsRoot, { recursive: true });
-  await fs.cp(sourceDir, targetDir, { recursive: true, force: false, errorOnExist: true });
-  return { targetDir, scope: input.scope, platform: input.platform, name: skill.name };
+  const targets = platforms.map((platform) => {
+    const skillsRoot = path.join(baseDir, platform === 'codex' ? '.codex' : '.claude', 'skills');
+    return { platform, skillsRoot, targetDir: path.join(skillsRoot, folderName) };
+  });
+  for (const target of targets) {
+    const exists = await fs.stat(target.targetDir).then(() => true).catch(() => false);
+    if (exists) { const error = new Error(`目标已存在：${target.targetDir}`); error.status = 409; throw error; }
+  }
+  for (const target of targets) {
+    await fs.mkdir(target.skillsRoot, { recursive: true });
+    await fs.cp(sourceDir, target.targetDir, { recursive: true, force: false, errorOnExist: true });
+  }
+  return { targetDirs: targets.map((target) => target.targetDir), scope: input.scope, platforms, name: skill.name };
 }
+
+async function deleteGlobalSkill(id) {
+  const skill = (await scanSkills()).find((item) => item.id === id);
+  if (!skill) throw new Error('找不到要删除的 Skill，请重新扫描');
+  if (skill.scope !== 'global') { const error = new Error('只能删除全局安装的 Skill'); error.status = 403; throw error; }
+  const skillDir = path.dirname(skill.path);
+  const allowedRoots = defaultSkillRoots.filter((item) => item.scope === 'global').map((item) => path.resolve(item.root));
+  const allowed = allowedRoots.some((root) => { const relative = path.relative(root, path.resolve(skillDir)); return relative && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative); });
+  if (!allowed) { const error = new Error('Skill 目录不在允许删除的全局路径中'); error.status = 403; throw error; }
+  await fs.rm(skillDir, { recursive: true, force: false });
+  return { ok: true, name: skill.name, deletedDir: skillDir };
+}
+
+async function inspectInstallTargets(input) {
+  if (input.scope !== 'project') return { missing: [] };
+  if (!input.projectPath) throw new Error('请先选择项目目录');
+  const projectPath = path.resolve(input.projectPath);
+  const stat = await fs.stat(projectPath).catch(() => null);
+  if (!stat?.isDirectory()) throw new Error('选择的项目目录不存在');
+  const platforms = [...new Set(Array.isArray(input.platforms) ? input.platforms : [])];
+  if (!platforms.length || platforms.some((platform) => !['codex', 'claude'].includes(platform))) throw new Error('请至少选择一个安装平台');
+  const missing = [];
+  for (const platform of platforms) {
+    const target = path.join(projectPath, platform === 'codex' ? '.codex' : '.claude', 'skills');
+    const targetStat = await fs.stat(target).catch(() => null);
+    if (!targetStat?.isDirectory()) missing.push({ platform, target });
+  }
+  return { missing };
+}
+async function updateSkillMetadata(id, description, tagsInput) { const skill = (await scanSkills()).find((item) => item.id === id); if (!skill) throw new Error('找不到 Skill'); const tags = [...new Set((Array.isArray(tagsInput) ? tagsInput : []).map((tag) => String(tag).trim().slice(0, 30)).filter(Boolean))].slice(0, 10); if (!tags.length) throw new Error('请至少添加一个卡片标签'); const config = await readConfig(); config.skillDescriptions = config.skillDescriptions || {}; config.skillTags = config.skillTags || {}; config.skillDescriptions[id] = String(description || '').trim().slice(0, 500); config.skillTags[id] = tags; await writeConfig(config); return { description: config.skillDescriptions[id], tags }; }
+async function summarizeWithDeepSeek(id) { const skill = (await scanSkills()).find((item) => item.id === id); const config = await readConfig(); if (!skill) throw new Error('找不到 Skill'); const content = await fs.readFile(skill.path, 'utf8'); const plainText = content.replace(/^---[\s\S]*?---/m, '').replace(/[#*_`>]/g, '').replace(/\s+/g, ' ').trim(); const localSummary = plainText.length > 120 ? `${plainText.slice(0, 117)}…` : (plainText || skill.description); if (!config.deepseekApiKey) return { mode: 'local', summary: localSummary }; const response = await fetch('https://api.deepseek.com/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.deepseekApiKey}` }, body: JSON.stringify({ model: 'deepseek-chat', temperature: 0.3, messages: [{ role: 'system', content: '请完整阅读以下 SKILL.md，用简体中文概括该 Skill 的用途、核心能力和适用场景。只输出一段自然语言介绍，不超过120字，不要使用 Markdown。' }, { role: 'user', content: `Skill 名称：${skill.name}\n\nSKILL.md 完整内容：\n${content}` }] }) }); if (!response.ok) throw new Error('DeepSeek 请求失败，请检查 API Key 或网络'); const data = await response.json(); return { mode: 'deepseek', summary: data.choices?.[0]?.message?.content?.trim() || localSummary }; }
+
 
 async function readExperts() {
   try { return JSON.parse(await fs.readFile(EXPERTS_FILE, 'utf8')); } catch { return []; }
@@ -179,6 +221,14 @@ async function api(req, res, url) {
     return json(res, 200, { path: selectedPath });
   }
   if (req.method === 'POST' && url.pathname === '/api/install') return json(res, 201, await installSkill(await body(req)));
+  if (req.method === 'POST' && url.pathname === '/api/install-targets') return json(res, 200, await inspectInstallTargets(await body(req)));
+  if (req.method === 'PUT' && url.pathname.startsWith('/api/skill/')) { const input = await body(req); return json(res, 200, await updateSkillMetadata(decodeURIComponent(url.pathname.slice('/api/skill/'.length)), input.description, input.tags)); }
+  if (req.method === 'POST' && url.pathname === '/api/skill-summary') { const input = await body(req); return json(res, 200, await summarizeWithDeepSeek(input.id)); }
+  if (req.method === 'POST' && url.pathname === '/api/deepseek-config') { const input = await body(req); const config = await readConfig(); config.deepseekApiKey = String(input.apiKey || '').trim(); await writeConfig(config); return json(res, 200, { configured: Boolean(config.deepseekApiKey) }); }
+  if (req.method === 'DELETE' && url.pathname.startsWith('/api/skills/')) {
+    const id = decodeURIComponent(url.pathname.slice('/api/skills/'.length));
+    return json(res, 200, await deleteGlobalSkill(id));
+  }
   if (req.method === 'GET' && url.pathname === '/api/experts') return json(res, 200, await readExperts());
   if (req.method === 'POST' && url.pathname === '/api/experts') {
     const input = await body(req);

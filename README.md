@@ -1,6 +1,6 @@
-# Skills 管理平台
+# SkillForge
 
-一个本地运行的 Codex 与 Claude Code Skills 管理工具。它可以扫描本机 Skills，将其整理成可搜索、可分类的卡片墙，并支持安装、复制使用口令和组合专家。
+一个本地运行的 Codex 与 Claude Code Skills 管理工具。它可以扫描本机 Skills，将其整理成可搜索、可分类的卡片墙，并支持查看、编辑介绍、安装、复用和组合专家。
 
 > 数据默认保存在本机，服务仅监听 `127.0.0.1`。
 
@@ -8,11 +8,17 @@
 
 - 自动扫描 Codex 与 Claude Code 的全局及当前项目 Skills
 - 手动指定独立的 Skills 仓库目录
-- 按名称、描述和来源搜索
-- 按能力分类筛选
+- 按名称、介绍、标签和来源搜索
+- 为每个 Skill 添加最多 10 个自定义标签，并按标签筛选
 - 区分展示仓库、全局安装和项目级安装的 Skills
-- 从 Skills 仓库安装到 Codex 或 Claude Code
-- 支持全局安装与项目级安装
+- 同名全局 Skill 自动合并展示，并标明已安装的智能体
+- 从 Skills 仓库同时或分别安装到 Codex、Claude Code
+- 支持全局安装与项目级安装，显示实际目标路径
+- 项目级目标目录缺失时，可确认后自动创建
+- 按智能体选择并删除已全局安装的 Skill
+- 点击卡片查看独立详情，并可继续编辑、安装或使用
+- 手动编辑 Skill 的平台介绍，不修改原始 `SKILL.md`
+- 可选接入 DeepSeek，读取完整 `SKILL.md` 并生成中文介绍
 - 为 Codex 和 Claude Code 分别复制使用口令
 - 将多个 Skills 组合为可复用的“专家”
 - 支持深色与浅色主题
@@ -29,8 +35,8 @@
 ## 快速开始
 
 ```powershell
-git clone <你的仓库地址>
-cd skill管理平台
+git clone https://github.com/moyiyang11/SkillForge.git
+cd SkillForge
 npm start
 ```
 
@@ -65,14 +71,41 @@ skills-library/
 
 ## 安装 Skills
 
-只有来自“Skills 仓库”的卡片会显示安装按钮。安装时可以选择平台与范围：
+只有来自“Skills 仓库”的卡片会显示安装按钮。安装时可以同时选择一个或两个平台，并选择安装范围：
 
 | 平台 | 全局安装位置 | 项目级安装位置 |
 | --- | --- | --- |
 | Codex | `~/.codex/skills` | `项目根目录/.codex/skills` |
 | Claude Code | `~/.claude/skills` | `项目根目录/.claude/skills` |
 
-如果目标位置已经存在同名目录，平台会停止安装，不会覆盖原文件。
+全局目标位置会显示当前电脑上的实际绝对路径，因此更换电脑或用户名后会自动适配。项目级安装会先检查所选项目中的智能体目录；如果 `.codex/skills` 或 `.claude/skills` 不存在，平台会询问是否自动创建。
+
+如果任一目标位置已经存在同名目录，平台会停止本次安装，不会覆盖原文件，也不会只完成部分平台的安装。
+
+## 管理 Skills
+
+- 点击 Skill 卡片的非按钮区域，可打开独立详情弹窗。
+- 详情中会显示名称、来源、标签和介绍，并提供编辑、安装（仓库 Skill）和使用入口。
+- 同名的 Codex 与 Claude Code 全局 Skill 会合并为一张卡片。
+- 删除合并后的全局 Skill 时，可以手动选择从 Codex、Claude Code 或两者中删除。
+- 删除仅允许作用于当前用户的 `.codex/skills` 和 `.claude/skills` 目录。
+
+### 编辑介绍与标签
+
+每个 Skill 都可以在平台中编辑介绍，并逐个新增或删除卡片标签。每个 Skill 最多保存 10 个标签。
+
+这些修改只保存在 SkillForge 的本地配置中，不会修改原始 `SKILL.md`。编辑后的标签会同步用于卡片展示、搜索和顶部筛选。
+
+## AI 中文总结（可选）
+
+页面右上角提供“配置 DeepSeek”入口：
+
+- 配置 DeepSeek API Key 后，平台会读取对应的完整 `SKILL.md`，调用 `deepseek-chat` 生成不超过 120 字的简体中文介绍。
+- 未配置 API Key 时，使用完整 `SKILL.md` 的正文生成本地基础摘要，不发起网络请求。
+- AI 结果只会填入介绍编辑框，用户点击“保存”后才会写入本地配置。
+- 无论使用哪种模式，平台都不会修改原始 `SKILL.md`。
+
+> 使用 DeepSeek 时，完整 `SKILL.md` 内容会发送给 DeepSeek API。请勿对包含密钥、私人信息或其他敏感内容的 Skill 使用在线总结。
 
 ## 使用 Skills
 
@@ -98,10 +131,11 @@ data/config.json
 data/experts.json
 ```
 
-- `data/config.json`：保存所选 Skills 仓库的本地绝对路径
+- `data/config.json`：保存 Skills 仓库路径、自定义介绍、标签和可选的 DeepSeek API Key
 - `data/experts.json`：保存用户创建的专家组合
 - 本地服务仅绑定 `127.0.0.1`，不会主动向局域网或公网开放
-- 上传 GitHub 前，建议运行 `git status --short --ignored` 确认本地数据未被跟踪
+- 上传 GitHub 前，建议运行 `git status` 和 `git diff --cached`，确认本地配置与敏感信息未进入暂存区
+- 不要使用 `git add -f data/config.json`，也不要将 DeepSeek API Key 写入源代码
 
 ## 项目结构
 

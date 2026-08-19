@@ -7,17 +7,17 @@
 <body>
   <div class="shell">
     <aside class="sidebar">
-      <a class="brand" href="#"><span class="logo">S</span><span>Skillbox</span></a>
+      <div class="brand"><span class="logo">S</span><span>SkillForge</span></div>
       <nav><button class="nav active" data-view="skills"><span>⌘</span> Skill 广场</button><button class="nav" data-view="experts"><span>✦</span> 我的专家 <b id="expertCount">0</b></button></nav>
       <div class="side-bottom"><div class="tip"><span>⌁</span><div><strong>本地优先</strong><small>数据只保存在你的电脑</small></div></div><button class="theme" id="themeToggle"><span>☾</span> 切换深色模式</button></div>
     </aside>
     <main>
-      <header><button class="mobile-menu" id="menuBtn">☰</button><div><p class="eyebrow">YOUR LOCAL SKILL LIBRARY</p><h1 id="pageTitle">发现趁手的 Skill</h1><p id="pageDesc">集中管理 Codex 与 Claude Code 的能力扩展。</p></div><button class="primary" id="newExpert">＋ 创建专家</button></header>
+      <header><button class="mobile-menu" id="menuBtn">☰</button><div><p class="eyebrow">YOUR LOCAL SKILL LIBRARY</p><h1 id="pageTitle">发现、管理与组合趁手的 Skill</h1><p id="pageDesc">集中管理你的 Skills，发现、组合、复用并部署各种 AI 能力扩展。</p></div><button class="secondary deepseek-config" id="configureDeepSeek">配置 DeepSeek</button></header>
       <section id="skillsView">
-        <div class="library-bar"><div><b>Skills 仓库</b><span id="libraryPath">尚未选择，将扫描默认目录</span></div><div class="library-actions"><button class="secondary" id="clearLibrary">清空路径</button><button class="secondary" id="chooseLibrary">浏览文件夹</button></div></div>
+        <div class="library-bar"><div><b>Skills 仓库</b><span id="libraryPath">尚未选择 Skills 目录，请选择一个目录</span></div><div class="library-actions"><button class="secondary" id="clearLibrary">清空路径</button><button class="secondary" id="chooseLibrary">浏览文件夹</button></div></div>
         <div class="toolbar"><label class="search"><span>⌕</span><input id="search" placeholder="搜索 Skill 名称、描述或能力…"></label><button class="scan" id="rescan">↻ 重新扫描</button></div>
         <div class="filters" id="filters"></div>
-        <div class="summary"><span><b id="skillCount">0</b> 个 Skill</span><span id="sourceSummary">正在扫描本地目录…</span></div>
+        <div class="summary"><span><b id="skillCount">0</b> 个 Skill</span></div>
         <div id="skillGroups"><section class="skill-group" id="libraryGroup"><div class="group-title"><div><b>Skills 仓库</b><span>待安装的 Skill</span></div><em id="libraryCount">0</em></div><div class="grid" id="libraryGrid"></div></section><section class="skill-group" id="globalGroup"><div class="group-title"><div><b>全局安装</b><span>所有项目都可以使用的 Skill</span></div><em id="globalCount">0</em></div><div class="grid" id="globalGrid"></div></section><section class="skill-group" id="projectGroup"><div class="group-title"><div><b>项目级安装</b><span>只在当前项目中使用的 Skill</span></div><em id="projectCount">0</em></div><div class="grid" id="projectGrid"></div></section></div><div class="empty hidden" id="emptySkills"><b>没有找到匹配的 Skill</b><span>换个关键词或分类试试看。</span></div>
       </section>
       <section id="expertsView" class="hidden"><div class="expert-grid" id="expertGrid"></div><div class="empty" id="emptyExperts"><div class="empty-icon">✦</div><b>还没有创建专家</b><span>把多个 Skill 组合起来，让 Codex 自动调用合适的能力。</span><button class="primary" id="emptyCreate">创建第一个专家</button></div></section>
