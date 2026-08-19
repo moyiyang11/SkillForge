@@ -2,14 +2,15 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
-const { execFile } = require('node:child_process');
+const { execFile, spawn } = require('node:child_process');
 const { promisify } = require('node:util');
 const execFileAsync = promisify(execFile);
 
 const PORT = Number(process.env.PORT) || 4173;
 const ROOT = __dirname;
+const IS_PACKAGED = Boolean(process.pkg || process.isBun);
 const PUBLIC = path.join(ROOT, 'public');
-const DATA = path.join(ROOT, 'data');
+const DATA = IS_PACKAGED ? path.join(path.dirname(process.execPath), 'data') : path.join(ROOT, 'data');
 const EXPERTS_FILE = path.join(DATA, 'experts.json');
 const CONFIG_FILE = path.join(DATA, 'config.json');
 
@@ -68,7 +69,7 @@ async function collectSkillFiles(root, depth = 0) {
   const own = entries.find((entry) => entry.isFile() && entry.name.toLowerCase() === 'skill.md');
   if (own) return [path.join(root, own.name)];
   const nested = await Promise.all(entries
-    .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+    .filter((entry) => entry.isDirectory() && (!entry.name.startsWith('.') || entry.name === '.agents'))
     .map((entry) => collectSkillFiles(path.join(root, entry.name), depth + 1)));
   return nested.flat();
 }
@@ -144,14 +145,23 @@ async function installSkill(input) {
   return { targetDirs: targets.map((target) => target.targetDir), scope: input.scope, platforms, name: skill.name };
 }
 
-async function deleteGlobalSkill(id) {
+async function deleteSkillById(id) {
   const skill = (await scanSkills()).find((item) => item.id === id);
   if (!skill) throw new Error('找不到要删除的 Skill，请重新扫描');
-  if (skill.scope !== 'global') { const error = new Error('只能删除全局安装的 Skill'); error.status = 403; throw error; }
   const skillDir = path.dirname(skill.path);
-  const allowedRoots = defaultSkillRoots.filter((item) => item.scope === 'global').map((item) => path.resolve(item.root));
-  const allowed = allowedRoots.some((root) => { const relative = path.relative(root, path.resolve(skillDir)); return relative && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative); });
-  if (!allowed) { const error = new Error('Skill 目录不在允许删除的全局路径中'); error.status = 403; throw error; }
+  let allowed = false;
+  if (skill.scope === 'global') {
+    const allowedRoots = defaultSkillRoots.filter((item) => item.scope === 'global').map((item) => path.resolve(item.root));
+    allowed = allowedRoots.some((root) => { const relative = path.relative(root, path.resolve(skillDir)); return relative && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative); });
+  } else if (skill.scope === 'library') {
+    const config = await readConfig();
+    const libRoot = config.libraryPath ? path.resolve(config.libraryPath) : '';
+    const relative = libRoot ? path.relative(libRoot, path.resolve(skillDir)) : '';
+    allowed = Boolean(relative && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
+  } else {
+    const error = new Error('只能删除全局安装或 Skills 仓库中的 Skill'); error.status = 403; throw error;
+  }
+  if (!allowed) { const error = new Error('Skill 目录不在允许删除的路径中'); error.status = 403; throw error; }
   await fs.rm(skillDir, { recursive: true, force: false });
   return { ok: true, name: skill.name, deletedDir: skillDir };
 }
@@ -227,7 +237,7 @@ async function api(req, res, url) {
   if (req.method === 'POST' && url.pathname === '/api/deepseek-config') { const input = await body(req); const config = await readConfig(); config.deepseekApiKey = String(input.apiKey || '').trim(); await writeConfig(config); return json(res, 200, { configured: Boolean(config.deepseekApiKey) }); }
   if (req.method === 'DELETE' && url.pathname.startsWith('/api/skills/')) {
     const id = decodeURIComponent(url.pathname.slice('/api/skills/'.length));
-    return json(res, 200, await deleteGlobalSkill(id));
+    return json(res, 200, await deleteSkillById(id));
   }
   if (req.method === 'GET' && url.pathname === '/api/experts') return json(res, 200, await readExperts());
   if (req.method === 'POST' && url.pathname === '/api/experts') {
@@ -241,12 +251,29 @@ async function api(req, res, url) {
     const id = decodeURIComponent(url.pathname.split('/').pop());
     const experts = await readExperts(); await writeExperts(experts.filter((item) => item.id !== id)); return json(res, 200, { ok: true });
   }
+  if (req.method === 'PUT' && url.pathname.startsWith('/api/experts/')) {
+    const id = decodeURIComponent(url.pathname.split('/').pop());
+    const input = await body(req);
+    if (!input.name?.trim() || !Array.isArray(input.skillIds) || !input.skillIds.length) return json(res, 400, { error: '请填写专家名称并选择至少一个 Skill' });
+    const experts = await readExperts();
+    const index = experts.findIndex((item) => item.id === id);
+    if (index === -1) return json(res, 404, { error: '专家不存在' });
+    experts[index] = { ...experts[index], name: input.name.trim().slice(0, 60), description: String(input.description || '').trim().slice(0, 200), skillIds: input.skillIds };
+    await writeExperts(experts); return json(res, 200, experts[index]);
+  }
   return false;
 }
 
 const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json; charset=utf-8' };
+let EMBEDDED = null;
+try { EMBEDDED = require('./public-assets'); } catch {}
 async function serveStatic(res, pathname) {
   const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
+  if (EMBEDDED && Object.prototype.hasOwnProperty.call(EMBEDDED, relative)) {
+    const content = Buffer.from(EMBEDDED[relative], 'base64');
+    res.writeHead(200, { 'Content-Type': mime[path.extname(relative)] || 'application/octet-stream', 'Cache-Control': 'no-cache' }); res.end(content);
+    return;
+  }
   const file = path.resolve(PUBLIC, relative);
   if (!file.startsWith(PUBLIC + path.sep)) return json(res, 403, { error: 'Forbidden' });
   try {
@@ -263,4 +290,37 @@ const server = http.createServer(async (req, res) => {
   } catch (error) { json(res, error.status || 500, { error: error.message || '服务器错误' }); }
 });
 
-server.listen(PORT, '127.0.0.1', () => console.log(`Skill 管理平台已启动：http://127.0.0.1:${PORT}`));
+async function openAppWindow(port) {
+  const url = `http://127.0.0.1:${port}`;
+  const pf = process.env.ProgramFiles || 'C:\\Program Files';
+  const pfx = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
+  const candidates = [
+    path.join(pfx, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    path.join(pf, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    path.join(pfx, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    path.join(pf, 'Microsoft', 'Edge', 'Application', 'msedge.exe')
+  ];
+  for (const exe of candidates) {
+    try { await fs.access(exe); spawn(exe, ['--app=' + url, '--new-window'], { detached: true, stdio: 'ignore' }).unref(); return; } catch { /* try next */ }
+  }
+  spawn('cmd.exe', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref();
+}
+function isOurApp(port) {
+  return new Promise((resolve) => {
+    const req = http.get({ host: '127.0.0.1', port, path: '/' }, (res) => {
+      let body = ''; res.on('data', (c) => body += c); res.on('end', () => resolve(body.includes('Skill 管理平台') || body.includes('id="skillsView"')));
+    });
+    req.on('error', () => resolve(false)); req.setTimeout(800, () => { req.destroy(); resolve(false); });
+  });
+}
+function startServer(port) {
+  server.on('error', async (err) => {
+    if (err.code === 'EADDRINUSE') {
+      if (await isOurApp(port)) { console.log(`端口 ${port} 已有本应用在运行，直接打开窗口`); if (IS_PACKAGED) openAppWindow(port); return; }
+      if (port < PORT + 10) { console.log(`端口 ${port} 被占用，尝试 ${port + 1}`); startServer(port + 1); }
+      else { console.error('没有可用端口，无法启动'); process.exit(1); }
+    } else { console.error('服务器启动失败：' + err.message); process.exit(1); }
+  });
+  server.listen(port, '127.0.0.1', () => { console.log(`Skill 管理平台已启动：http://127.0.0.1:${port}`); if (IS_PACKAGED) openAppWindow(port); });
+}
+startServer(PORT);

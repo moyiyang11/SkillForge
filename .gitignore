@@ -1,5 +1,8 @@
 data/experts.json
 data/config.json
 node_modules/
+dist/
+public-assets.js
 .DS_Store
 项目说明.md
+DESIGN-tesla.md
