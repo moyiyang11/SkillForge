@@ -8,3 +8,7 @@ public-assets.js
 DESIGN-tesla.md
 .claude
 .codex
+
+# Bun cache/build files
+*.bun-build
+.bun/
