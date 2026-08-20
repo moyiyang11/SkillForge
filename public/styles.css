@@ -14,7 +14,7 @@
 dialog{background:#fff;border:0;border-radius:4px;box-shadow:0 12px 36px rgba(23,26,32,.18)}dialog::backdrop{background:rgba(23,26,32,.65)}form{padding:28px}.dialog-head h2{font-size:28px;font-weight:500;letter-spacing:normal}.skill-detail{padding:28px}.skill-detail>p{font-size:14px;color:#393c41}.install-target{background:#f4f4f4;border-radius:4px}.deepseek-config{margin-top:0}
 [data-theme=dark]{--bg:#171a20;--panel:#171a20;--text:#fff;--muted:#d0d1d2;--line:#393c41;--soft:#232832;--accent:#3e6ae1;--accent2:#3e6ae1;--shadow:none}[data-theme=dark] body,[data-theme=dark] .sidebar,[data-theme=dark] .card,[data-theme=dark] .expert-card,[data-theme=dark] .library-bar,[data-theme=dark] .search,[data-theme=dark] .project-select,[data-theme=dark] dialog{background:#171a20;color:#fff}[data-theme=dark] .secondary,[data-theme=dark] .scan,[data-theme=dark] .install,[data-theme=dark] .skill-edit,[data-theme=dark] .card-actions .use{background:#171a20;color:#fff;border-color:#5c5e62}[data-theme=dark] .card,[data-theme=dark] .expert-card{border-bottom-color:#393c41}[data-theme=dark] .card p,[data-theme=dark] .expert-card p{color:#d0d1d2}[data-theme=dark] .category,[data-theme=dark] .chip,[data-theme=dark] .detail-meta span{background:#232832;color:#d0d1d2}
 @media(max-width:760px){main{padding:24px 18px 56px}h1{font-size:32px}.grid,.expert-grid{grid-template-columns:1fr}.card,.expert-card{padding:18px 0}.deepseek-config{margin-left:42px}}
-main.experts-page{padding-top:8px;text-align:left;margin:0 auto}main.experts-page header{align-items:flex-start;justify-content:flex-start;margin-top:0;margin-bottom:22px}main.experts-page header>div{flex:1}main.experts-page .empty{align-items:center;justify-content:flex-start;text-align:center;min-height:0;margin:0;padding-top:56px}main.experts-page .empty .empty-icon{margin:0 auto;width:72px;height:72px;border-radius:50%;font-size:30px;box-shadow:0 10px 24px rgba(109,85,232,.15)}main.experts-page .empty b{font-size:18px;font-weight:700}main.experts-page .empty span{font-size:13px;color:var(--muted);max-width:340px;line-height:1.7}main.experts-page .empty .primary{margin-top:18px}@media(max-width:760px){main.experts-page{padding-top:6px}}
+main.page-top{padding-top:8px;text-align:left;margin:0 auto}main.page-top header{align-items:flex-start;justify-content:flex-start;margin-top:0;margin-bottom:22px}main.page-top header>div{flex:1}main.page-top .empty{align-items:center;justify-content:flex-start;text-align:center;min-height:0;margin:0;padding-top:56px}main.page-top .empty .empty-icon{margin:0 auto;width:72px;height:72px;border-radius:50%;font-size:30px;box-shadow:0 10px 24px rgba(109,85,232,.15)}main.page-top .empty b{font-size:18px;font-weight:700}main.page-top .empty span{font-size:13px;color:var(--muted);max-width:340px;line-height:1.7}main.page-top .empty .primary{margin-top:18px}@media(max-width:760px){main.page-top{padding-top:6px}}
 .deepseek-config{flex:0 0 auto;white-space:nowrap;margin-left:18px}@media(max-width:760px){header{flex-wrap:wrap}.deepseek-config{width:100%;margin:16px 0 0 42px}}
 .toast{top:30px;bottom:auto;transform:translate(-50%,-20px);z-index:9999}
 dialog>.toast{position:absolute;top:14px;bottom:auto;z-index:2}
@@ -30,13 +30,13 @@ dialog[open]{animation:dialog-in var(--dur-slow) var(--ease-out)}
 /* Toast — transition not keyframes (interruptible), strong ease-out, symmetric path */
 .toast{transition:transform var(--dur-base) var(--ease-out),opacity var(--dur-base) var(--ease-out)}
 /* Empty-state delight — rare/first-time tier */
-main.experts-page .empty .empty-icon{animation:pop-in var(--dur-slow) var(--ease-out)}
+main.page-top .empty .empty-icon{animation:pop-in var(--dur-slow) var(--ease-out)}
 @keyframes pop-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 /* Hover lift gated to fine pointers — touch must not fire false hovers */
 @media(hover:hover) and (pointer:fine){.expert-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#cfc8ef}}
 /* Reduced motion — fewer and gentler: keep opacity/color, drop transform-based motion */
 @media(prefers-reduced-motion:reduce){
-  dialog[open],main.experts-page .empty .empty-icon{animation-name:fade-only;animation-duration:var(--dur-base)}
+  dialog[open],main.page-top .empty .empty-icon{animation-name:fade-only;animation-duration:var(--dur-base)}
   .nav:active,.filter:active,.pick:active,.platform-option:active,.scope-option:active,.icon-btn:active,.card-check:active,.theme:active,.primary:active,.secondary:active,.scan:active,.install:active,.skill-edit:active,.skill-delete:active,.card-actions .use:active,.danger-confirm:active,.expert-card:hover{transform:none!important}
 }
 @keyframes fade-only{from{opacity:0}to{opacity:1}}
@@ -117,7 +117,7 @@ header p{font-size:13px;color:var(--muted)}
 .expert-actions .primary,.expert-actions .danger{padding:9px 14px;font-size:12.5px;border-radius:8px;font-weight:600}
 .expert-actions .danger{border:1px solid var(--line);background:var(--panel);color:#ef4444}
 .expert-actions .danger:hover{background:#fef2f2}
-main.experts-page .empty .empty-icon{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(59,130,246,.22)}
+main.page-top .empty .empty-icon{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;box-shadow:0 10px 24px rgba(59,130,246,.22)}
 .batch-bar{border-color:var(--line);color:var(--muted);font-size:13px}
 .dialog-head h2{font-size:20px;font-weight:600;letter-spacing:-.2px}
 [data-theme=dark] .nav.active,[data-theme=dark] .filter.active{background:#f1f5f9;color:#0f1115;border-color:#f1f5f9}

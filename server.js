@@ -183,7 +183,60 @@ async function inspectInstallTargets(input) {
   return { missing };
 }
 async function updateSkillMetadata(id, description, tagsInput) { const skill = (await scanSkills()).find((item) => item.id === id); if (!skill) throw new Error('找不到 Skill'); const tags = [...new Set((Array.isArray(tagsInput) ? tagsInput : []).map((tag) => String(tag).trim().slice(0, 30)).filter(Boolean))].slice(0, 10); if (!tags.length) throw new Error('请至少添加一个卡片标签'); const config = await readConfig(); config.skillDescriptions = config.skillDescriptions || {}; config.skillTags = config.skillTags || {}; config.skillDescriptions[id] = String(description || '').trim().slice(0, 500); config.skillTags[id] = tags; await writeConfig(config); return { description: config.skillDescriptions[id], tags }; }
-async function summarizeWithDeepSeek(id) { const skill = (await scanSkills()).find((item) => item.id === id); const config = await readConfig(); if (!skill) throw new Error('找不到 Skill'); const content = await fs.readFile(skill.path, 'utf8'); const plainText = content.replace(/^---[\s\S]*?---/m, '').replace(/[#*_`>]/g, '').replace(/\s+/g, ' ').trim(); const localSummary = plainText.length > 120 ? `${plainText.slice(0, 117)}…` : (plainText || skill.description); if (!config.deepseekApiKey) return { mode: 'local', summary: localSummary }; const response = await fetch('https://api.deepseek.com/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.deepseekApiKey}` }, body: JSON.stringify({ model: 'deepseek-chat', temperature: 0.3, messages: [{ role: 'system', content: '请完整阅读以下 SKILL.md，用简体中文概括该 Skill 的用途、核心能力和适用场景。只输出一段自然语言介绍，不超过120字，不要使用 Markdown。' }, { role: 'user', content: `Skill 名称：${skill.name}\n\nSKILL.md 完整内容：\n${content}` }] }) }); if (!response.ok) throw new Error('DeepSeek 请求失败，请检查 API Key 或网络'); const data = await response.json(); return { mode: 'deepseek', summary: data.choices?.[0]?.message?.content?.trim() || localSummary }; }
+function inferLocalTags(skill, content) {
+  const meta = parseFrontmatter(content);
+  const tags = [];
+  const value = `${skill.name} ${skill.description}`;
+  for (const [category, rule] of categoryRules) {
+    if (rule.test(value) && !tags.includes(category)) tags.push(category);
+  }
+  const rawTags = String(meta.tags || '').replace(/[\[\]"']/g, '').split(/[,，;；、]+/).map((tag) => tag.trim()).filter(Boolean);
+  for (const tag of rawTags) {
+    if (tags.length >= 10) break;
+    if (!tags.includes(tag)) tags.push(tag);
+  }
+  return tags;
+}
+
+function parseSummaryJson(text) {
+  try { return JSON.parse(text.trim()); } catch {}
+  const match = String(text).match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try { return JSON.parse(match[0]); } catch { return null; }
+}
+
+async function summarizeWithDeepSeek(id) {
+  const skill = (await scanSkills()).find((item) => item.id === id);
+  const config = await readConfig();
+  if (!skill) throw new Error('找不到 Skill');
+  const content = await fs.readFile(skill.path, 'utf8');
+  const plainText = content.replace(/^---[\s\S]*?---/m, '').replace(/[#*_`>]/g, '').replace(/\s+/g, ' ').trim();
+  const localSummary = plainText.length > 120 ? `${plainText.slice(0, 117)}…` : (plainText || skill.description);
+  const localTags = inferLocalTags(skill, content);
+  if (!config.deepseekApiKey) return { mode: 'local', summary: localSummary, tags: localTags };
+  const response = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.deepseekApiKey}` },
+    body: JSON.stringify({
+      model: 'deepseek-chat', temperature: 0.3,
+      messages: [
+        { role: 'system', content: '你是 Skill 元数据整理助手。请阅读用户提供的 SKILL.md，只输出严格 JSON（不要使用 Markdown 代码块，不要输出任何其他文字），格式：{"summary":"用简体中文概括该 Skill 的用途、核心能力和适用场景，不超过120字的一段自然语言","tags":["3到5个用于分类和搜索的中文标签，每个不超过10字"]}' },
+        { role: 'user', content: `Skill 名称：${skill.name}\n\nSKILL.md 完整内容：\n${content}` }
+      ]
+    })
+  });
+  if (!response.ok) throw new Error('DeepSeek 请求失败，请检查 API Key 或网络');
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  const parsed = parseSummaryJson(text);
+  if (parsed) {
+    const tags = Array.isArray(parsed.tags) && parsed.tags.length
+      ? parsed.tags.map((tag) => String(tag).trim().slice(0, 30)).filter(Boolean).slice(0, 10)
+      : localTags;
+    return { mode: 'deepseek', summary: String(parsed.summary || localSummary).trim(), tags };
+  }
+  return { mode: 'deepseek', summary: text.trim() || localSummary, tags: localTags };
+}
 
 
 async function readExperts() {

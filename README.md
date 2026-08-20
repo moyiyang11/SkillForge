@@ -117,9 +117,9 @@ skills-library/
 
 页面右上角提供「配置 DeepSeek」入口：
 
-- 配置 DeepSeek API Key 后，平台会读取对应的完整 `SKILL.md`，调用 `deepseek-chat` 生成不超过 120 字的简体中文介绍。
-- 未配置 API Key 时，使用完整 `SKILL.md` 的正文生成本地基础摘要，不发起网络请求。
-- AI 结果只会填入介绍编辑框，用户点击「保存」后才会写入本地配置。
+- 配置 DeepSeek API Key 后，平台会读取对应的完整 `SKILL.md`，调用 `deepseek-chat` 生成不超过 120 字的简体中文介绍，并推荐一组卡片标签。
+- 未配置 API Key 时，使用完整 `SKILL.md` 的正文生成本地基础摘要，并根据分类规则与 frontmatter 标签生成推荐标签，不发起网络请求。
+- AI 结果会同时填入介绍编辑框并替换为推荐的卡片标签，用户点击「保存」后才会写入本地配置。
 - 无论使用哪种模式，平台都不会修改原始 `SKILL.md`。
 
 > 使用 DeepSeek 时，完整 `SKILL.md` 内容会发送给 DeepSeek API。请勿对包含密钥、私人信息或其他敏感内容的 Skill 使用在线总结。
