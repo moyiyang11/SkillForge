@@ -142,7 +142,27 @@ async function installSkill(input) {
     await fs.mkdir(target.skillsRoot, { recursive: true });
     await fs.cp(sourceDir, target.targetDir, { recursive: true, force: false, errorOnExist: true });
   }
-  return { targetDirs: targets.map((target) => target.targetDir), scope: input.scope, platforms, name: skill.name };
+  // 将仓库卡片中已编辑的介绍与标签同步到新安装的 Skill（按其安装后的 id 写入配置）
+  const config = await readConfig();
+  config.skillDescriptions = config.skillDescriptions || {};
+  config.skillTags = config.skillTags || {};
+  const editedDescription = config.skillDescriptions[input.skillId];
+  const editedTags = config.skillTags[input.skillId];
+  let migrated = false;
+  if (editedDescription || editedTags) {
+    for (const target of targets) {
+      const installedSource = target.platform === 'codex'
+        ? (input.scope === 'project' ? 'Codex · 项目' : 'Codex')
+        : (input.scope === 'project' ? 'Claude Code · 项目' : 'Claude Code');
+      const newKey = `${installedSource}:${skill.name}:${path.join(target.targetDir, path.basename(skill.path))}`;
+      const newId = Buffer.from(newKey).toString('base64url');
+      if (editedDescription) config.skillDescriptions[newId] = editedDescription;
+      if (editedTags) config.skillTags[newId] = editedTags;
+    }
+    await writeConfig(config);
+    migrated = true;
+  }
+  return { targetDirs: targets.map((target) => target.targetDir), scope: input.scope, platforms, name: skill.name, migrated };
 }
 
 async function deleteSkillById(id) {

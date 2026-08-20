@@ -200,3 +200,44 @@ main.page-top .empty .empty-icon{background:linear-gradient(135deg,var(--accent2
 [data-theme=dark] .expert-card .more{color:#8b93a3}
 [data-theme=dark] .expert-card .more:hover{color:#f1f5f9}
 @media(max-width:760px){.topbar{flex-wrap:wrap}.topbar .search{flex-basis:100%}.topbar .scan,.topbar #chooseLibrary{flex:1}.lib-path{flex:1 1 100%;margin-top:8px}.filters-row{flex-direction:column;align-items:flex-start}.summary{margin-left:2px}}
+/* ===== Skill Hub 列表条重构 — 横向通栏条（List Tile） ===== */
+main{max-width:960px}
+.topbar{flex-wrap:wrap}
+.grid{grid-template-columns:1fr;gap:12px}
+.card{display:flex;flex-direction:row;align-items:center;gap:14px;min-width:0;min-height:0;padding:14px 18px;border:1px solid #f1f5f9;border-radius:12px;background:var(--panel);box-shadow:0 4px 20px -2px rgba(0,0,0,.03)}
+.card:hover{transform:none;border-color:#cbd5e1;box-shadow:0 8px 26px -6px rgba(15,23,42,.10)}
+.card .card-check{position:static;opacity:1;flex:0 0 auto}
+.card .skill-icon{width:38px;height:38px;border-radius:12px;font-size:15px;flex:0 0 auto}
+.card .card-main{flex:1;min-width:0}
+.card .card-title-row{display:flex;align-items:center;gap:8px;min-width:0}
+.card .card-title-row h3{margin:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .card-title-row .more{position:relative;top:auto;right:auto;width:24px;height:24px;opacity:1;flex:0 0 auto}
+.card .card-title-row .more-menu{position:absolute;top:calc(100% + 6px);right:0}
+.card .card-main p{margin:4px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:0;-webkit-line-clamp:unset}
+.card .card-tags{flex:0 0 auto;max-width:34%;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.card .source-badge{flex:0 0 auto;font-size:11px;font-weight:600;color:var(--accent);background:var(--soft);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap}
+.card .foot-actions{flex:0 0 auto;display:flex;gap:8px}
+.card .foot-action{font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px;border:1px solid transparent}
+.card .foot-action.install{background:linear-gradient(180deg,#4f8ef7,#3b82f6);color:#fff;box-shadow:0 1px 2px rgba(15,23,42,.12)}
+.card .foot-action.install:hover{background:linear-gradient(180deg,#3d7bf0,#2f6fea)}
+.card .foot-action:not(.install):not(.danger){background:var(--soft);color:#475569}
+.card .foot-action:not(.install):not(.danger):hover{background:#e2e8f0;color:#1e293b}
+.card .foot-action.danger{background:transparent;color:#94a3b8}
+.card .foot-action.danger:hover{color:#ef4444;background:#fef2f2}
+main .group-title{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+main .group-title em{font-style:normal;font-size:11px;font-weight:600;color:var(--muted);background:var(--soft);padding:2px 10px;border-radius:999px}
+main .skill-group{margin-bottom:34px}
+.lib-path{padding:8px 14px;border-radius:999px;background:var(--soft);border:1px solid var(--line)}
+.lib-path .path-icon{display:grid;place-items:center;color:var(--accent);line-height:0}
+.lib-path code{background:transparent;padding:0}
+[data-theme=dark] .card{border-color:#2a2f3a;box-shadow:0 4px 20px -2px rgba(0,0,0,.25)}
+[data-theme=dark] .card:hover{border-color:#3b4453}
+[data-theme=dark] .card .foot-action:not(.install):not(.danger){background:#232832;color:#cbd5e1}
+[data-theme=dark] .card .foot-action:not(.install):not(.danger):hover{background:#2f3644;color:#f1f5f9}
+[data-theme=dark] .card .foot-action.danger{color:#8b93a3}
+[data-theme=dark] .card .foot-action.danger:hover{color:#f87171;background:#2a1f1f}
+[data-theme=dark] .card .source-badge{border-color:#3b4453}
+[data-theme=dark] main .group-title{border-color:#2a2f3a}
+[data-theme=dark] .lib-path{border-color:#2a2f3a;background:#1f242d}
+[data-theme=dark] .lib-path .path-icon{color:#60a5fa}
+@media(max-width:760px){.card{flex-wrap:wrap;padding:14px}.card .card-main{flex:1 1 60%}.card .card-tags,.card .foot-actions{flex:1 1 100%;max-width:100%;justify-content:flex-start}.card .card-tags{order:3}.card .foot-actions{order:4}}
