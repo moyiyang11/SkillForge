@@ -16,9 +16,7 @@ const CONFIG_FILE = path.join(DATA, 'config.json');
 
 const defaultSkillRoots = [
   { root: path.join(os.homedir(), '.codex', 'skills'), source: 'Codex', scope: 'global' },
-  { root: path.join(os.homedir(), '.claude', 'skills'), source: 'Claude Code', scope: 'global' },
-  { root: path.join(ROOT, '.codex', 'skills'), source: 'Codex · 项目', scope: 'project' },
-  { root: path.join(ROOT, '.claude', 'skills'), source: 'Claude Code · 项目', scope: 'project' }
+  { root: path.join(os.homedir(), '.claude', 'skills'), source: 'Claude Code', scope: 'global' }
 ];
 
 async function readConfig() {
@@ -32,9 +30,17 @@ async function writeConfig(config) {
 
 async function getSkillRoots() {
   const config = await readConfig();
-  return config.libraryPath
-    ? [{ root: path.resolve(config.libraryPath), source: 'Skills 仓库', scope: 'library' }, ...defaultSkillRoots]
-    : defaultSkillRoots;
+  const libraryRoots = config.libraryPath
+    ? [{ root: path.resolve(config.libraryPath), source: 'Skills 仓库', scope: 'library' }]
+    : [];
+  const projectPath = config.projectPath ? path.resolve(config.projectPath) : '';
+  const projectRoots = projectPath
+    ? [
+        { root: path.join(projectPath, '.codex', 'skills'), source: 'Codex · 项目', scope: 'project' },
+        { root: path.join(projectPath, '.claude', 'skills'), source: 'Claude Code · 项目', scope: 'project' }
+      ]
+    : [];
+  return [...libraryRoots, ...defaultSkillRoots, ...projectRoots];
 }
 
 const categoryRules = [
@@ -123,11 +129,13 @@ async function installSkill(input) {
   let baseDir;
   if (input.scope === 'global') baseDir = os.homedir();
   else if (input.scope === 'project') {
-    if (!input.projectPath) throw new Error('请先选择项目目录');
-    const projectPath = path.resolve(input.projectPath);
-    const stat = await fs.stat(projectPath).catch(() => null);
+    const projectConfig = await readConfig();
+    const projectPath = String(input.projectPath || projectConfig.projectPath || '').trim();
+    if (!projectPath) throw new Error('请先选择项目目录');
+    const resolved = path.resolve(projectPath);
+    const stat = await fs.stat(resolved).catch(() => null);
     if (!stat?.isDirectory()) throw new Error('选择的项目目录不存在');
-    baseDir = projectPath;
+    baseDir = resolved;
   } else throw new Error('无效的安装范围');
   const folderName = path.basename(sourceDir);
   const targets = platforms.map((platform) => {
@@ -178,6 +186,13 @@ async function deleteSkillById(id) {
     const libRoot = config.libraryPath ? path.resolve(config.libraryPath) : '';
     const relative = libRoot ? path.relative(libRoot, path.resolve(skillDir)) : '';
     allowed = Boolean(relative && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
+  } else if (skill.scope === 'project') {
+    const config = await readConfig();
+    const projectPath = config.projectPath ? path.resolve(config.projectPath) : '';
+    const allowedRoots = projectPath
+      ? [path.join(projectPath, '.codex', 'skills'), path.join(projectPath, '.claude', 'skills')].map((root) => path.resolve(root))
+      : [];
+    allowed = allowedRoots.some((root) => { const relative = path.relative(root, path.resolve(skillDir)); return relative && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative); });
   } else {
     const error = new Error('只能删除全局安装或 Skills 仓库中的 Skill'); error.status = 403; throw error;
   }
@@ -188,15 +203,17 @@ async function deleteSkillById(id) {
 
 async function inspectInstallTargets(input) {
   if (input.scope !== 'project') return { missing: [] };
-  if (!input.projectPath) throw new Error('请先选择项目目录');
-  const projectPath = path.resolve(input.projectPath);
-  const stat = await fs.stat(projectPath).catch(() => null);
+  const config = await readConfig();
+  const projectPath = String(input.projectPath || config.projectPath || '').trim();
+  if (!projectPath) throw new Error('请先选择项目目录');
+  const resolved = path.resolve(projectPath);
+  const stat = await fs.stat(resolved).catch(() => null);
   if (!stat?.isDirectory()) throw new Error('选择的项目目录不存在');
   const platforms = [...new Set(Array.isArray(input.platforms) ? input.platforms : [])];
   if (!platforms.length || platforms.some((platform) => !['codex', 'claude'].includes(platform))) throw new Error('请至少选择一个安装平台');
   const missing = [];
   for (const platform of platforms) {
-    const target = path.join(projectPath, platform === 'codex' ? '.codex' : '.claude', 'skills');
+    const target = path.join(resolved, platform === 'codex' ? '.codex' : '.claude', 'skills');
     const targetStat = await fs.stat(target).catch(() => null);
     if (!targetStat?.isDirectory()) missing.push({ platform, target });
   }
@@ -285,16 +302,32 @@ async function api(req, res, url) {
   if (req.method === 'GET' && url.pathname === '/api/config') return json(res, 200, await readConfig());
   if (req.method === 'POST' && url.pathname === '/api/config') {
     const input = await body(req);
-    const rawPath = String(input.libraryPath || '').trim();
-    if (!rawPath) return json(res, 400, { error: '请输入仓库路径' });
-    const libraryPath = path.resolve(rawPath);
-    const stat = await fs.stat(libraryPath).catch(() => null);
-    if (!stat?.isDirectory()) return json(res, 400, { error: '输入的仓库路径不存在或不是目录' });
-    const config = await readConfig(); config.libraryPath = libraryPath; await writeConfig(config);
+    const config = await readConfig();
+    if (typeof input.libraryPath === 'string') {
+      const rawPath = input.libraryPath.trim();
+      if (!rawPath) return json(res, 400, { error: '请输入仓库路径' });
+      const libraryPath = path.resolve(rawPath);
+      const stat = await fs.stat(libraryPath).catch(() => null);
+      if (!stat?.isDirectory()) return json(res, 400, { error: '输入的仓库路径不存在或不是目录' });
+      config.libraryPath = libraryPath;
+    }
+    if (typeof input.projectPath === 'string') {
+      const rawPath = input.projectPath.trim();
+      if (!rawPath) return json(res, 400, { error: '请输入项目路径' });
+      const projectPath = path.resolve(rawPath);
+      const stat = await fs.stat(projectPath).catch(() => null);
+      if (!stat?.isDirectory()) return json(res, 400, { error: '输入的项目路径不存在或不是目录' });
+      config.projectPath = projectPath;
+    }
+    await writeConfig(config);
     return json(res, 200, config);
   }
   if (req.method === 'DELETE' && url.pathname === '/api/config/library') {
     const config = await readConfig(); config.libraryPath = ''; await writeConfig(config);
+    return json(res, 200, config);
+  }
+  if (req.method === 'DELETE' && url.pathname === '/api/config/project') {
+    const config = await readConfig(); config.projectPath = ''; await writeConfig(config);
     return json(res, 200, config);
   }
   if (req.method === 'POST' && url.pathname === '/api/select-directory') {

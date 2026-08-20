@@ -241,3 +241,12 @@ main .skill-group{margin-bottom:34px}
 [data-theme=dark] .lib-path{border-color:#2a2f3a;background:#1f242d}
 [data-theme=dark] .lib-path .path-icon{color:#60a5fa}
 @media(max-width:760px){.card{flex-wrap:wrap;padding:14px}.card .card-main{flex:1 1 60%}.card .card-tags,.card .foot-actions{flex:1 1 100%;max-width:100%;justify-content:flex-start}.card .card-tags{order:3}.card .foot-actions{order:4}}
+/* ===== 项目级安装 — 项目路径选择 ===== */
+.project-path-bar{display:flex;align-items:center;gap:10px;margin:-4px 2px 16px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--soft)}
+.project-path-bar .path-icon{display:grid;place-items:center;color:var(--accent);line-height:0;flex:0 0 auto}
+.project-path-bar input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--text);font-size:13px}
+.project-path-bar .secondary{padding:6px 14px;font-size:12px;white-space:nowrap}
+.project-empty{font-size:12px;color:var(--muted);padding:12px 2px 6px;line-height:1.7}
+[data-theme=dark] .project-path-bar{border-color:#2a2f3a;background:#1f242d}
+[data-theme=dark] .project-path-bar .path-icon{color:#60a5fa}
+@media(max-width:760px){.project-path-bar{flex-wrap:wrap}.project-path-bar input{flex-basis:100%}.project-path-bar .secondary{flex:1}}
