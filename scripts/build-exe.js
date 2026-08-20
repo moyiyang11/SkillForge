@@ -22,6 +22,17 @@ console.log('✓ 已内联静态资源：', Object.keys(files).length, '个文�
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 execSync('bun build --compile --windows-hide-console server.js --outfile "' + OUT + '"', { cwd: root, stdio: 'inherit' });
 
+// Bun 1.3.x may retain the console subsystem when cross-compiling on Windows.
+// Normalize the PE subsystem to WINDOWS_GUI (2) so launching the exe never
+// allocates a Command Prompt window.
+const pe = fs.readFileSync(OUT);
+const peHeader = pe.readUInt32LE(0x3c);
+if (pe.toString('ascii', peHeader, peHeader + 4) === 'PE\0\0') {
+  const subsystemOffset = peHeader + 0x5c;
+  pe.writeUInt16LE(2, subsystemOffset);
+  fs.writeFileSync(OUT, pe);
+}
+
 // 3. 清理临时内联文件（已在 exe 内，避免影响 node 开发模式）
 fs.rmSync(ASSETS, { force: true });
 console.log('✓ 打包完成：' + OUT);

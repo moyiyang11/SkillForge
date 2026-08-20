@@ -250,3 +250,112 @@ main .skill-group{margin-bottom:34px}
 [data-theme=dark] .project-path-bar{border-color:#2a2f3a;background:#1f242d}
 [data-theme=dark] .project-path-bar .path-icon{color:#60a5fa}
 @media(max-width:760px){.project-path-bar{flex-wrap:wrap}.project-path-bar input{flex-basis:100%}.project-path-bar .secondary{flex:1}}
+
+/* SkillForge visual refresh: a quiet workbench with one electric-blue signal. */
+:root{--bg:#f5f7fb;--panel:#fff;--text:#172033;--muted:#667085;--line:#e5e9f2;--soft:#eef3ff;--accent:#4169e1;--shadow:0 18px 45px rgba(31,48,87,.08)}
+body{font-family:"Segoe UI Variable","PingFang SC","Microsoft YaHei",sans-serif;background:radial-gradient(circle at 78% -10%,#e5ecff 0,transparent 34%),var(--bg);letter-spacing:.01em}
+.shell{min-height:100vh}.sidebar{background:rgba(255,255,255,.78);backdrop-filter:blur(18px);border-right:1px solid var(--line)}
+.brand{font-weight:700;letter-spacing:.02em}.logo{background:linear-gradient(135deg,#172b63,#5579e8);border-radius:10px;box-shadow:0 8px 18px rgba(65,105,225,.28)}
+.nav{margin:4px 14px;padding:11px 14px;border-radius:10px;color:#7a8496}.nav.active{background:#eaf0ff;color:#2d4fae;box-shadow:inset 3px 0 var(--accent)}
+main{max-width:1380px;padding:48px 56px 80px}header{align-items:flex-start;margin-bottom:34px}h1{font-size:clamp(32px,4vw,54px);font-weight:650;letter-spacing:-.045em;color:#172033}header .eyebrow{color:var(--accent);font-weight:700;letter-spacing:.16em}
+.topbar{gap:12px}.search{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.82);box-shadow:0 4px 16px rgba(31,48,87,.04)}.search:focus-within{border-color:#91a8f4;box-shadow:0 0 0 4px rgba(65,105,225,.12)}
+.scan,.secondary,.primary{border-radius:10px;font-weight:600}.scan,.secondary{background:#fff;border:1px solid #d9dfec;color:#344054}.scan:hover,.secondary:hover{background:#f4f7ff;border-color:#9fb2ed;color:#2d4fae}.primary{background:linear-gradient(135deg,#4169e1,#5a7df0);box-shadow:0 8px 18px rgba(65,105,225,.22)}
+.lib-path,.project-path-bar{border:1px solid #dfe5f1;border-radius:12px;background:rgba(255,255,255,.7);box-shadow:0 3px 12px rgba(31,48,87,.03)}.project-path-bar{margin-top:2px;padding:11px 14px}.project-path-bar .path-icon{color:var(--accent)}
+.skill-group{margin-top:36px}.group-title{margin-bottom:14px}.group-title b{font-size:18px;letter-spacing:-.02em}.group-title span{color:#8490a3}.group-title em{background:#e8edff;color:#3d5fc7;border-radius:999px;padding:3px 10px;font-style:normal;font-size:12px}
+.grid{gap:18px}.card,.expert-card{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.86);padding:22px;box-shadow:0 6px 20px rgba(31,48,87,.035);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}.card:hover,.expert-card:hover{transform:translateY(-3px);border-color:#b9c8f5;box-shadow:var(--shadow)}.card h3,.expert-card h3{font-weight:650;color:#1c2940}.card p,.expert-card p{color:#667085;line-height:1.6}.skill-icon{background:linear-gradient(145deg,#e9efff,#d9e3ff);color:#3655ad;border-radius:12px}
+.category,.chip,.detail-meta span{background:#eef2fa;color:#58657b;border-radius:7px}.source-badge{border-radius:999px;background:#f4f6fb;color:#7b879b}.foot-action{border-radius:8px!important}.foot-action.install{background:linear-gradient(135deg,#4169e1,#5c7df1)!important}
+dialog{border-radius:18px;box-shadow:0 24px 80px rgba(20,31,61,.2)}dialog::backdrop{background:rgba(20,31,61,.38);backdrop-filter:blur(3px)}.toast{border-radius:10px;background:#172033}
+[data-theme=dark]{--bg:#111827;--panel:#182235;--text:#edf2ff;--muted:#9aa8c0;--line:#2b3850;--soft:#202e49}.sidebar,[data-theme=dark] .sidebar{background:rgba(17,24,39,.82)}[data-theme=dark] body{background:radial-gradient(circle at 80% -10%,#263760 0,transparent 35%),var(--bg)}[data-theme=dark] .card,[data-theme=dark] .expert-card,[data-theme=dark] .search,[data-theme=dark] .lib-path,[data-theme=dark] .project-path-bar{background:rgba(24,34,53,.9);border-color:var(--line)}
+@media(max-width:760px){main{padding:28px 20px 56px}header{margin-bottom:24px}h1{font-size:34px}.card,.expert-card{border-radius:13px;padding:18px}}
+
+/* ===== Warm paper / single-column card refinement ===== */
+main,.page-top{background-color:#f7f7f8;background-image:radial-gradient(circle at 50% -10%,rgba(240,243,246,.8) 0%,rgba(247,247,248,0) 50%);background-attachment:fixed}
+.grid{display:flex;flex-direction:column;gap:10px}
+.card,.expert-card{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;background:#fff;border:1px solid #e9ecef;border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.03),0 1px 2px rgba(15,23,42,.02);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.card:hover,.expert-card:hover{transform:translateY(-2px);border-color:#dee2e6;box-shadow:0 5px 14px rgba(15,23,42,.07),0 2px 4px rgba(15,23,42,.04)}
+.card-check{align-self:center;flex:0 0 auto}.card-main{flex:1;min-width:0}.card h3,.expert-card h3{font-size:15px;font-weight:600;line-height:1.3;color:#172033}.card p,.expert-card p{font-size:13px;line-height:1.5;color:#475569;margin:5px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.skill-icon{flex:0 0 40px;width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;display:grid;place-items:center;font-weight:700;box-shadow:0 4px 10px rgba(29,78,216,.2)}
+.card-tags{display:flex;align-items:center;gap:6px;flex:0 0 auto;max-width:25%;overflow:hidden}.category{background:#f1f5f9;color:#475569;border:0;font-size:12px;border-radius:6px;padding:2px 8px;white-space:nowrap}.source-badge{background:#eef2ff;color:#4f46e5;border:1px solid #e0e7ff;border-radius:6px;font-size:12px;padding:2px 8px;white-space:nowrap}
+.foot-actions{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:0 0 auto}.foot-action{height:32px;min-width:52px;padding:0 11px;border-radius:7px!important;font-size:13px;line-height:30px}.card .foot-action.install{background:#2563eb!important;color:#fff;border-color:#2563eb}.card .foot-action:not(.install):not(.danger){background:#f8fafc;color:#475569;border:1px solid #e2e8f0}.card .foot-action.danger{background:transparent;color:#94a3b8;border-color:transparent}.card .foot-action.danger:hover{background:#fef2f2;color:#ef4444;border-color:#fecaca}
+.project-path-bar,.lib-path{background:#fff;border-color:#e9ecef;box-shadow:0 1px 3px rgba(15,23,42,.025)}
+@media(max-width:760px){.card,.expert-card{align-items:flex-start;flex-wrap:wrap}.card-main{flex:1 1 calc(100% - 60px)}.card-tags{order:3;max-width:100%;flex-basis:100%}.foot-actions{order:4;margin-left:0;flex-basis:100%;justify-content:flex-start}.skill-icon{width:36px;height:36px;flex-basis:36px}}
+
+/* Sidebar palette aligned with the light workbench */
+.sidebar{background-color:#f8fafc;background-image:none;border-right:1px solid #e2e8f0;color:#64748b}
+.sidebar .brand{color:#0f172a}
+.sidebar .nav,.sidebar .theme{color:#64748b}
+.sidebar .nav:hover,.sidebar .theme:hover{background:#e2e8f0;color:#0f172a}
+.sidebar .nav.active{background-color:#fff;color:#2563eb;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.sidebar .nav.active:hover{background-color:#fff;color:#2563eb}
+.sidebar .tip{background:#fff;border:1px solid #e2e8f0;color:#475569;box-shadow:none}
+.sidebar .tip strong{color:#0f172a}.sidebar .tip small{color:#64748b}
+
+/* Dark mode: one continuous slate canvas with quiet elevated surfaces */
+[data-theme=dark] body,[data-theme=dark] main,[data-theme=dark] .page-top{background-color:#0f172a;background-image:none;background-attachment:initial;color:#f8fafc}
+[data-theme=dark] .sidebar{background-color:#0f172a;background-image:none;border-right:1px solid rgba(255,255,255,.08);color:#94a3b8}
+[data-theme=dark] .sidebar .brand{color:#f8fafc}
+[data-theme=dark] .sidebar .nav,[data-theme=dark] .sidebar .theme{color:#94a3b8}
+[data-theme=dark] .sidebar .nav:hover,[data-theme=dark] .sidebar .theme:hover{background:#1e293b;color:#f8fafc}
+[data-theme=dark] .sidebar .nav.active{background:#1e293b;color:#60a5fa;box-shadow:0 1px 3px rgba(0,0,0,.28)}
+[data-theme=dark] .sidebar .nav.active:hover{background:#1e293b;color:#60a5fa}
+[data-theme=dark] .sidebar .tip{background:#1e293b;border:1px solid rgba(255,255,255,.08);color:#94a3b8}
+[data-theme=dark] .sidebar .tip strong{color:#f8fafc}[data-theme=dark] .sidebar .tip small{color:#94a3b8}
+[data-theme=dark] h1,[data-theme=dark] h2,[data-theme=dark] h3,[data-theme=dark] .group-title b{color:#f8fafc}
+[data-theme=dark] .eyebrow,[data-theme=dark] .summary,[data-theme=dark] .group-title span,[data-theme=dark] .card p,[data-theme=dark] .expert-card p{color:#94a3b8}
+[data-theme=dark] .card,[data-theme=dark] .expert-card,[data-theme=dark] .search,[data-theme=dark] .lib-path,[data-theme=dark] .project-path-bar,[data-theme=dark] .project-select,[data-theme=dark] .library-bar{background:#1e293b;border:1px solid rgba(255,255,255,.08);color:#f8fafc;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+[data-theme=dark] .card:hover,[data-theme=dark] .expert-card:hover{border-color:#334155;box-shadow:0 8px 22px rgba(0,0,0,.24)}
+[data-theme=dark] .search input,[data-theme=dark] .project-path-bar input,[data-theme=dark] input,[data-theme=dark] textarea{color:#f8fafc}
+[data-theme=dark] .search input::placeholder,[data-theme=dark] .project-path-bar input::placeholder,[data-theme=dark] input::placeholder,[data-theme=dark] textarea::placeholder{color:#64748b}
+[data-theme=dark] .secondary,[data-theme=dark] .scan,[data-theme=dark] .install,[data-theme=dark] .skill-edit,[data-theme=dark] .card-actions .use{background:rgba(255,255,255,.1);color:#e2e8f0;border-color:rgba(255,255,255,.12)}
+[data-theme=dark] .secondary:hover,[data-theme=dark] .scan:hover,[data-theme=dark] .install:hover,[data-theme=dark] .skill-edit:hover{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.2)}
+[data-theme=dark] .category{background:#273449;color:#cbd5e1}[data-theme=dark] .source-badge{background:#252a55;color:#a5b4fc;border-color:#373b75}
+[data-theme=dark] dialog{background:#1e293b;color:#f8fafc;border:1px solid rgba(255,255,255,.08)}[data-theme=dark] .install-target{background:#273449;color:#cbd5e1}
+
+/* Light mode depth pass: cool-gray shell, white working surfaces */
+html:not([data-theme=dark]) body{background:#f8fafc}
+html:not([data-theme=dark]) .sidebar{background:#f1f5f9;border-right:1px solid #e2e8f0}
+html:not([data-theme=dark]) main,html:not([data-theme=dark]) .page-top{background:#f8fafc;background-image:radial-gradient(circle at 50% -8%,rgba(224,231,255,.62) 0%,rgba(248,250,252,0) 44%);background-attachment:fixed}
+html:not([data-theme=dark]) .card,html:not([data-theme=dark]) .expert-card{background:#fff;border:1px solid #e2e8f0;box-shadow:0 2px 8px -2px rgba(0,0,0,.05)}
+html:not([data-theme=dark]) .card:hover,html:not([data-theme=dark]) .expert-card:hover{border-color:#cbd5e1;box-shadow:0 8px 18px -5px rgba(15,23,42,.12)}
+html:not([data-theme=dark]) .skill-icon{border-radius:12px;background:linear-gradient(135deg,#3b82f6,#4f46e5);color:#fff;box-shadow:0 5px 12px rgba(79,70,229,.2)}
+html:not([data-theme=dark]) header{position:relative;isolation:isolate}html:not([data-theme=dark]) header::before{content:"";position:absolute;z-index:-1;top:-34px;left:-28px;width:460px;height:180px;pointer-events:none;background:radial-gradient(ellipse,rgba(199,210,254,.38),rgba(224,231,255,0) 70%)}
+html:not([data-theme=dark]) .skill-group .group-title{padding-bottom:13px;border-bottom:1px solid #e2e8f0}
+html:not([data-theme=dark]) .filter{background:#e2e8f0;border-color:#e2e8f0;color:#475569;transition:background-color .18s ease,color .18s ease,transform .18s ease}
+html:not([data-theme=dark]) .filter:hover{background:#cbd5e1;border-color:#cbd5e1;color:#1e293b}html:not([data-theme=dark]) .filter.active{background:#2563eb;border-color:#2563eb;color:#fff}
+
+/* Light mode hierarchy: slate canvas and translucent control tray */
+html:not([data-theme=dark]) body{background:#f1f5f9}
+html:not([data-theme=dark]) main,html:not([data-theme=dark]) .page-top{background:#f1f5f9;background-image:radial-gradient(circle at 50% 0%,rgba(219,234,254,.45) 0%,rgba(241,245,249,0) 60%);background-attachment:fixed}
+html:not([data-theme=dark]) .sidebar{background:#eaedf2;border-right:1px solid #cbd5e1}
+html:not([data-theme=dark]) .sidebar .nav.active{background:#fff;color:#2563eb;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+html:not([data-theme=dark]) .topbar,html:not([data-theme=dark]) .filters-row{background:rgba(255,255,255,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(226,232,240,.8);border-radius:12px;padding:12px 16px}
+html:not([data-theme=dark]) .filters-row{margin-top:12px}.topbar .lib-path{background:transparent;border-color:transparent;box-shadow:none}
+html:not([data-theme=dark]) .card,html:not([data-theme=dark]) .expert-card{background:#fff;border:1px solid #e2e8f0;box-shadow:0 4px 6px -1px rgba(0,0,0,.04),0 2px 4px -2px rgba(0,0,0,.03)}
+html:not([data-theme=dark]) .card:hover,html:not([data-theme=dark]) .expert-card:hover{box-shadow:0 12px 22px -8px rgba(15,23,42,.16);border-color:#cbd5e1}
+
+/* Final pixel pass: aligned toolbar controls and quieter selection states */
+html:not([data-theme=dark]) .topbar{align-items:center}
+html:not([data-theme=dark]) .topbar .search,html:not([data-theme=dark]) .topbar .scan,html:not([data-theme=dark]) .topbar>#chooseLibrary,html:not([data-theme=dark]) .topbar .lib-path{height:36px;box-sizing:border-box}
+html:not([data-theme=dark]) .topbar .search{display:flex;align-items:center}
+html:not([data-theme=dark]) .topbar .lib-path{display:flex;align-items:center;background:#f1f5f9;color:#475569;border:0;border-radius:999px;padding-top:0;padding-bottom:0;font-size:13px}
+html:not([data-theme=dark]) .topbar .lib-path code{font-size:13px;color:#475569}
+html:not([data-theme=dark]) .filter.active{background:#dbeafe;border-color:#dbeafe;color:#1d4ed8;font-weight:500}
+html:not([data-theme=dark]) .card-check{margin-right:12px}
+html:not([data-theme=dark]) .card .foot-action:not(.install):not(.danger){background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
+html:not([data-theme=dark]) .card .foot-action:not(.install):not(.danger):hover{background:#f1f5f9;color:#334155;border-color:#cbd5e1}
+
+/* ===== SkillForge finish: cool slate canvas + elevated white work surfaces ===== */
+html:not([data-theme=dark]) body{background:#f1f5f9}
+html:not([data-theme=dark]) main,html:not([data-theme=dark]) .page-top{background:#f1f5f9;background-image:radial-gradient(circle at 50% -5%,rgba(191,219,254,.52) 0%,rgba(224,231,255,.2) 26%,rgba(241,245,249,0) 62%);background-attachment:fixed}
+html:not([data-theme=dark]) header{position:relative;isolation:isolate}html:not([data-theme=dark]) header::before{content:"";position:absolute;z-index:-1;top:-48px;left:-42px;width:560px;height:230px;pointer-events:none;background:radial-gradient(ellipse at 36% 38%,rgba(147,197,253,.34),rgba(196,181,253,.18) 38%,rgba(241,245,249,0) 72%);filter:blur(2px)}
+html:not([data-theme=dark]) .card,html:not([data-theme=dark]) .expert-card{background:#fff;border:1px solid rgba(226,232,240,.92);box-shadow:0 4px 20px rgba(0,0,0,.05);transition:transform .24s cubic-bezier(.22,.61,.36,1),box-shadow .24s ease,border-color .24s ease}
+html:not([data-theme=dark]) .card:hover,html:not([data-theme=dark]) .expert-card:hover{transform:translateY(-4px);border-color:#cbd5e1;box-shadow:0 14px 30px rgba(15,23,42,.11),0 4px 10px rgba(15,23,42,.05)}
+html:not([data-theme=dark]) .card h3,html:not([data-theme=dark]) .expert-card h3{font-size:15px;font-weight:600;color:#0f172a}html:not([data-theme=dark]) .card p,html:not([data-theme=dark]) .expert-card p{font-size:13px;line-height:1.5;color:#475569}
+html:not([data-theme=dark]) .skill-icon{border-radius:10px;color:#fff;background:linear-gradient(135deg,#3b82f6,#4f46e5);box-shadow:0 5px 12px rgba(79,70,229,.2)}
+html:not([data-theme=dark]) .card:nth-child(3n+2) .skill-icon{background:linear-gradient(135deg,#f97316,#e11d48);box-shadow:0 5px 12px rgba(225,29,72,.18)}html:not([data-theme=dark]) .card:nth-child(3n) .skill-icon{background:linear-gradient(135deg,#06b6d4,#7c3aed);box-shadow:0 5px 12px rgba(124,58,237,.18)}
+html:not([data-theme=dark]) .skill-group .group-title{padding-bottom:13px;border-bottom:1px solid #dbe2eb}
+html:not([data-theme=dark]) .topbar,html:not([data-theme=dark]) .filters-row{align-items:center}html:not([data-theme=dark]) .topbar .search,html:not([data-theme=dark]) .topbar .scan,html:not([data-theme=dark]) .topbar>#chooseLibrary,html:not([data-theme=dark]) .topbar .lib-path{height:36px;box-sizing:border-box}html:not([data-theme=dark]) .topbar .search{background:#fff;box-shadow:inset 0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04)}html:not([data-theme=dark]) .topbar .lib-path{background:#f1f5f9;border:0;color:#64748b;font-size:13px}
+html:not([data-theme=dark]) .filter{background:#f1f5f9;border-color:transparent;color:#475569}.filter:hover{background:#e2e8f0}.filter.active,html:not([data-theme=dark]) .filter.active{background:#dbeafe;border-color:transparent;color:#1d4ed8;font-weight:500}
+html:not([data-theme=dark]) .source-badge{background:#eef2ff;color:#4f46e5;border:1px solid #e0e7ff;border-radius:6px}
+html:not([data-theme=dark]) .foot-actions{margin-left:auto;align-items:center;justify-content:flex-end}.card .foot-action{height:32px;font-size:13px;line-height:30px}
+@media (prefers-reduced-motion:no-preference){html:not([data-theme=dark]) .card:hover .skill-icon{transform:scale(1.04) rotate(-1deg)}html:not([data-theme=dark]) .skill-icon{transition:transform .24s ease}}

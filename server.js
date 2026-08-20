@@ -115,7 +115,7 @@ async function chooseDirectory(description = '选择目录') {
   if (process.platform !== 'win32') throw new Error('当前目录选择器仅支持 Windows');
   const safeDescription = description.replace(/'/g, "''");
   const script = `Add-Type -AssemblyName System.Windows.Forms; $owner = New-Object System.Windows.Forms.Form; $owner.ShowInTaskbar = $false; $owner.TopMost = $true; $owner.Opacity = 0; $owner.Width = 1; $owner.Height = 1; $owner.StartPosition = 'CenterScreen'; $owner.Show(); $dialog = New-Object System.Windows.Forms.OpenFileDialog; $dialog.Title = '${safeDescription}（可点击地址栏或按 Ctrl+L 输入路径）'; $dialog.CheckFileExists = $false; $dialog.CheckPathExists = $true; $dialog.ValidateNames = $false; $dialog.FileName = '选择当前文件夹'; try { if ($dialog.ShowDialog($owner) -eq [System.Windows.Forms.DialogResult]::OK) { $selected = $dialog.FileName; if (-not (Test-Path -LiteralPath $selected -PathType Container)) { $selected = Split-Path -Parent $selected }; [Console]::OutputEncoding = [Text.Encoding]::UTF8; Write-Output $selected } } finally { $dialog.Dispose(); $owner.Close(); $owner.Dispose() }`;
-  const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-STA', '-Command', script], { encoding: 'utf8', windowsHide: false });
+  const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-STA', '-Command', script], { encoding: 'utf8', windowsHide: true });
   return stdout.trim();
 }
 
@@ -409,7 +409,8 @@ async function openAppWindow(port) {
   for (const exe of candidates) {
     try { await fs.access(exe); spawn(exe, ['--app=' + url, '--new-window'], { detached: true, stdio: 'ignore' }).unref(); return; } catch { /* try next */ }
   }
-  spawn('cmd.exe', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref();
+  // 不使用 cmd.exe 作为兜底，避免打包版启动时闪出命令提示符窗口。
+  spawn('rundll32.exe', ['url.dll,FileProtocolHandler', url], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
 }
 function isOurApp(port) {
   return new Promise((resolve) => {
@@ -422,11 +423,11 @@ function isOurApp(port) {
 function startServer(port) {
   server.on('error', async (err) => {
     if (err.code === 'EADDRINUSE') {
-      if (await isOurApp(port)) { console.log(`端口 ${port} 已有本应用在运行，直接打开窗口`); if (IS_PACKAGED) openAppWindow(port); return; }
-      if (port < PORT + 10) { console.log(`端口 ${port} 被占用，尝试 ${port + 1}`); startServer(port + 1); }
+      if (await isOurApp(port)) { if (!IS_PACKAGED) console.log(`端口 ${port} 已有本应用在运行，直接打开窗口`); if (IS_PACKAGED) openAppWindow(port); return; }
+      if (port < PORT + 10) { if (!IS_PACKAGED) console.log(`端口 ${port} 被占用，尝试 ${port + 1}`); startServer(port + 1); }
       else { console.error('没有可用端口，无法启动'); process.exit(1); }
     } else { console.error('服务器启动失败：' + err.message); process.exit(1); }
   });
-  server.listen(port, '127.0.0.1', () => { console.log(`Skill 管理平台已启动：http://127.0.0.1:${port}`); if (IS_PACKAGED) openAppWindow(port); });
+  server.listen(port, '127.0.0.1', () => { if (!IS_PACKAGED) console.log(`Skill 管理平台已启动：http://127.0.0.1:${port}`); if (IS_PACKAGED) openAppWindow(port); });
 }
 startServer(PORT);

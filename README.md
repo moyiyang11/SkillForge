@@ -6,11 +6,12 @@
 
 ## 功能特性
 
-- 自动扫描 Codex 与 Claude Code 的全局及当前项目 Skills
+- 自动扫描 Codex 与 Claude Code 的全局 Skills，以及用户明确选择的目标项目 Skills
 - 手动指定独立的 Skills 仓库目录
 - 按名称、介绍、标签和来源搜索，标签以胶囊筛选
 - 为每个 Skill 添加最多 10 个自定义标签
 - 区分展示「Skills 仓库 / 全局安装 / 项目级安装」，同名全局 Skill 自动合并
+- 项目级区域支持输入或选择项目路径；切换项目后，Skill 展示、安装和删除状态彼此独立
 - 从 Skills 仓库同时或分别安装到 Codex、Claude Code（全局 / 项目级）
 - 仓库卡片提供 **安装 / 使用 / 删除**；全局卡片提供 **使用 / 删除**
 - 勾选卡片可 **批量使用 / 批量安装 / 批量删除**（删除为纯确认弹窗，不再逐个勾选）
@@ -71,9 +72,9 @@ npm run build:exe
 | 类型 | Codex | Claude Code |
 | --- | --- | --- |
 | 全局安装 | `~/.codex/skills` | `~/.claude/skills` |
-| 当前项目 | `.codex/skills` | `.claude/skills` |
+| 目标项目（需在项目级区域选择） | `.codex/skills` | `.claude/skills` |
 
-还可以在页面顶部点击「浏览文件夹」，选择一个独立的 Skills 仓库。仓库中的每个 Skill 应使用独立目录，并包含 `SKILL.md`：
+页面顶部「浏览文件夹」用于选择独立的 Skills 仓库；项目级安装区域下方的「选择项目」用于指定项目目录。仓库中的每个 Skill 应使用独立目录，并包含 `SKILL.md`：
 
 ```text
 skills-library/
@@ -84,7 +85,7 @@ skills-library/
     └── references/
 ```
 
-未选择仓库时，顶部会显示斜体提示「尚未选择 Skills 目录，请选择一个目录」。
+未选择仓库时，顶部会显示提示「尚未选择 Skills 目录，请选择一个目录」。未选择目标项目时，项目级区域会提示先选择项目目录，平台不会默认绑定应用运行目录。
 
 ## 安装 Skills
 
@@ -92,10 +93,10 @@ skills-library/
 
 | 平台 | 全局安装位置 | 项目级安装位置 |
 | --- | --- | --- |
-| Codex | `~/.codex/skills` | `项目根目录/.codex/skills` |
-| Claude Code | `~/.claude/skills` | `项目根目录/.claude/skills` |
+| Codex | `~/.codex/skills` | `所选项目/.codex/skills` |
+| Claude Code | `~/.claude/skills` | `所选项目/.claude/skills` |
 
-全局目标位置会显示当前电脑上的实际绝对路径，因此更换电脑或用户名后会自动适配。项目级安装会先检查所选项目中的智能体目录；如果 `.codex/skills` 或 `.claude/skills` 不存在，平台会询问是否自动创建。
+全局目标位置会显示当前电脑上的实际绝对路径，因此更换电脑或用户名后会自动适配。项目级安装严格使用项目级区域当前选择的路径，并会先检查该项目中的智能体目录；如果 `.codex/skills` 或 `.claude/skills` 不存在，平台会询问是否自动创建。切换目标项目不会读取或删除其他项目的安装内容。
 
 如果任一目标位置已经存在同名目录，平台会停止本次安装，不会覆盖原文件，也不会只完成部分平台的安装。
 
@@ -106,6 +107,7 @@ skills-library/
 - 卡片右上角「⋯」菜单收纳编辑等次级操作；卡片底部直接提供主操作按钮
 - 点击 Skill 卡片的非按钮区域，可打开独立详情弹窗
 - 同名的 Codex 与 Claude Code 全局 Skill 会合并为一张卡片
+- 打开全局或项目级 Skill 的详情并点击「使用」时，平台会根据 Skill 来源自动限定使用平台：Codex Skill 只显示 Codex，Claude Code Skill 只显示 Claude Code
 - 删除操作（单个或批量）均为**纯确认弹窗**：只读列出待删 Skill 与路径，确认后删除
 - 删除仅允许作用于当前用户的 `.codex/skills`、`.claude/skills` 与 **Skills 仓库**目录内
 
@@ -155,7 +157,7 @@ data/config.json
 data/experts.json
 ```
 
-- `data/config.json`：保存 Skills 仓库路径、自定义介绍、标签和可选的 DeepSeek API Key
+- `data/config.json`：保存 Skills 仓库路径、当前项目路径、自定义介绍、标签和可选的 DeepSeek API Key
 - `data/experts.json`：保存用户创建的专家组合
 - 本地服务仅绑定 `127.0.0.1`，不会主动向局域网或公网开放
 - 打包为 exe 后，数据保存在 exe 旁边的 `data/` 文件夹
